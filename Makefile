@@ -14,7 +14,7 @@ scrape: ## Launches scraper (tiingo or cboe)
 backup: ## Backup scraped data to S3 bucket
 	pipenv run python -m backup
 
-image: ## Build docker image
+image: ## Build Docker image
 	docker build -t $(IMAGE_NAME):$(IMAGE_TAG) -t $(IMAGE_NAME):latest -f ./deploy/docker/Dockerfile .
 
 deploy: ## Deploys to Kubernetes cluster

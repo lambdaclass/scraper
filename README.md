@@ -40,13 +40,13 @@ $> make scrape CRAWLER=tiingo
 $> make scrape CRAWLER=cboe
 ```
 
-### Backup to S3 bucket
+### Backup to S3
 
 ```
 $> make backup
 ```
 
-### Build docker image
+### Build Docker image
 
 ```
 $> make image

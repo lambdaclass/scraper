@@ -10,10 +10,10 @@ spec:
       template:
         spec:
           imagePullSecrets:
-          - name: your-private-registry
+          - name: your-regsitry-secret
           containers:
           - name: cboe-scraper
-            image: scraper:latest
+            image: your-private-registry/scraper:latest
             imagePullPolicy: IfNotPresent
             command: ["make", "scrape"]
             volumeMounts:
@@ -26,7 +26,8 @@ spec:
               value: "/data"
             envFrom:
             - secretRef:
-                name: slack 
+                name: slack
+                optional: true
           volumes:
           - name: cboe-scraper-data
             persistentVolumeClaim:
@@ -50,16 +51,17 @@ spec:
       template:
         spec:
           imagePullSecrets:
-          - name: your-private-registry
+          - name: your-regsitry-secret
           containers:
           - name: tiingo-scraper
-            image: scraper:latest
+            image: your-private-registry/scraper:latest
             imagePullPolicy: IfNotPresent
             command: ["make", "scrape"]
             volumeMounts:
             - name: tiingo-symbols
               mountPath: "/home/scraper/tiingo-symbols.txt"
               subPath: "tiingo-symbols.txt"
+              readOnly: true
             - name: tiingo-scraper-data
               mountPath: "/data"
             env:
@@ -73,7 +75,8 @@ spec:
             - secretRef:
                 name: tiingo-api-key
             - secretRef:
-                name: slack 
+                name: slack
+                optional: true
           volumes:
           - name: tiingo-symbols
             configMap:
@@ -100,10 +103,10 @@ spec:
       template:
         spec:
           imagePullSecrets:
-          - name: your-private-registry
+          - name: your-regsitry-secret
           containers:
           - name: scraper-backup
-            image: scraper:latest
+            image: your-private-registry/scraper:latest
             imagePullPolicy: IfNotPresent
             command: ["make", "backup"]
             volumeMounts:
@@ -120,7 +123,8 @@ spec:
             - secretRef:
                 name: aws-keys
             - secretRef:
-                name: slack 
+                name: slack
+                optional: true
           volumes:
           - name: cboe-scraper-data
             persistentVolumeClaim:

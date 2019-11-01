@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: tiingo-symbols
+  namespace: scraper
+data:
+  tiingo_symbols.txt: |
+    VTSMX
+    VFINX
+    VIVAX
+    VIGRX
+    VIMSX
+    VMVIX
+    VMGIX
+    NAESX
+    VISVX
+    VISGX
+    BRSIX
+    VGTSX
+    VTMGX
+    VFSVX
+    EFV
+    VEURX
+    VPACX
+    VEIEX
+    VFISX
+    VFITX
+    IEF
+    VUSTX
+    VBMFX
+    VIPSX
+    PIGLX
+    PGBIX
+    VFSTX
+    LQD
+    VWESX
+    VWEHX
+    VWSTX
+    VWITX
+    VWLTX
+    VGSIX
+    GLD
+    PSAU
+    GSG

@@ -1,0 +1,134 @@
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: cboe-scraper
+  namespace: scraper
+spec:
+  schedule: "0 19 * * 1-5"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          imagePullSecrets:
+          - name: your-private-registry
+          containers:
+          - name: cboe-scraper
+            image: scraper:latest
+            imagePullPolicy: IfNotPresent
+            command: ["make", "scrape"]
+            volumeMounts:
+            - name: cboe-scraper-data
+              mountPath: "/data"
+            env:
+            - name: CRAWLER
+              value: cboe
+            - name: SCRAPER_DATA_PATH
+              value: "/data"
+            envFrom:
+            - secretRef:
+                name: slack 
+          volumes:
+          - name: cboe-scraper-data
+            persistentVolumeClaim:
+              claimName: cboe-scraper-pvc
+          restartPolicy: OnFailure
+      backoffLimit: 3
+  successfulJobsHistoryLimit: 10
+  suspend: false
+
+---
+
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: tiingo-scraper
+  namespace: scraper
+spec:
+  schedule: "0 19 * * 1-5"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          imagePullSecrets:
+          - name: your-private-registry
+          containers:
+          - name: tiingo-scraper
+            image: scraper:latest
+            imagePullPolicy: IfNotPresent
+            command: ["make", "scrape"]
+            volumeMounts:
+            - name: tiingo-symbols
+              mountPath: "/home/scraper/tiingo-symbols.txt"
+              subPath: "tiingo-symbols.txt"
+            - name: tiingo-scraper-data
+              mountPath: "/data"
+            env:
+            - name: CRAWLER
+              value: tiingo
+            - name: SCRAPER_DATA_PATH
+              value: "/data"
+            - name: SYMBOLS_FILE_PATH
+              value: "/home/scraper/tiingo-symbols.txt"
+            envFrom:
+            - secretRef:
+                name: tiingo-api-key
+            - secretRef:
+                name: slack 
+          volumes:
+          - name: tiingo-symbols
+            configMap:
+              name: tiingo-symbols
+          - name: tiingo-scraper-data
+            persistentVolumeClaim:
+              claimName: tiingo-scraper-pvc
+          restartPolicy: OnFailure
+      backoffLimit: 3
+  successfulJobsHistoryLimit: 10
+  suspend: false
+
+---
+
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: scraper-backup
+  namespace: scraper
+spec:
+  schedule: "0 0 * * 6"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          imagePullSecrets:
+          - name: your-private-registry
+          containers:
+          - name: scraper-backup
+            image: scraper:latest
+            imagePullPolicy: IfNotPresent
+            command: ["make", "backup"]
+            volumeMounts:
+            - name: tiingo-scraper-data
+              mountPath: "/data/tiingo"
+              subPath: "tiingo/"
+            - name: cboe-scraper-data
+              mountPath: "/data/cboe"
+              subPath: "cboe/"
+            env:
+            - name: SCRAPER_DATA_PATH
+              value: "/data"
+            envFrom:
+            - secretRef:
+                name: aws-keys
+            - secretRef:
+                name: slack 
+          volumes:
+          - name: cboe-scraper-data
+            persistentVolumeClaim:
+              claimName: cboe-scraper-pvc
+          - name: tiingo-scraper-data
+            persistentVolumeClaim:
+              claimName: tiingo-scraper-pvc
+          restartPolicy: OnFailure
+      backoffLimit: 3
+  successfulJobsHistoryLimit: 10
+  suspend: false

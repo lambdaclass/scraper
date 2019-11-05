@@ -10,20 +10,20 @@ spec:
       template:
         spec:
           imagePullSecrets:
-          - name: your-regsitry-secret
+          - name: your-registry-secret
           containers:
           - name: cboe-scraper
-            image: your-private-registry/scraper:latest
+            image: your-registry.com/scraper:latest
             imagePullPolicy: IfNotPresent
             command: ["make", "scrape"]
             volumeMounts:
             - name: cboe-scraper-data
-              mountPath: "/data"
+              mountPath: "/home/scraper/data/"
             env:
             - name: CRAWLER
               value: cboe
             - name: SCRAPER_DATA_PATH
-              value: "/data"
+              value: "/home/scraper/data/"
             envFrom:
             - secretRef:
                 name: slack
@@ -31,10 +31,13 @@ spec:
           volumes:
           - name: cboe-scraper-data
             persistentVolumeClaim:
-              claimName: cboe-scraper-pvc
+              claimName: cboe-pvc
           restartPolicy: OnFailure
+          securityContext:
+            fsGroup: 999
       backoffLimit: 3
   successfulJobsHistoryLimit: 10
+  failedJobsHistoryLimit: 10
   suspend: false
 
 ---
@@ -51,26 +54,26 @@ spec:
       template:
         spec:
           imagePullSecrets:
-          - name: your-regsitry-secret
+          - name: your-registry-secret
           containers:
           - name: tiingo-scraper
-            image: your-private-registry/scraper:latest
+            image: your-registry.com/scraper:latest
             imagePullPolicy: IfNotPresent
             command: ["make", "scrape"]
             volumeMounts:
             - name: tiingo-symbols
-              mountPath: "/home/scraper/tiingo-symbols.txt"
-              subPath: "tiingo-symbols.txt"
+              mountPath: "/home/scraper/tiingo_symbols.txt"
+              subPath: "tiingo_symbols.txt"
               readOnly: true
             - name: tiingo-scraper-data
-              mountPath: "/data"
+              mountPath: "/home/scraper/data/"
             env:
             - name: CRAWLER
               value: tiingo
             - name: SCRAPER_DATA_PATH
-              value: "/data"
+              value: "/home/scraper/data/"
             - name: SYMBOLS_FILE_PATH
-              value: "/home/scraper/tiingo-symbols.txt"
+              value: "/home/scraper/tiingo_symbols.txt"
             envFrom:
             - secretRef:
                 name: tiingo-api-key
@@ -83,10 +86,13 @@ spec:
               name: tiingo-symbols
           - name: tiingo-scraper-data
             persistentVolumeClaim:
-              claimName: tiingo-scraper-pvc
+              claimName: tiingo-pvc
           restartPolicy: OnFailure
+          securityContext:
+            fsGroup: 999
       backoffLimit: 3
   successfulJobsHistoryLimit: 10
+  failedJobsHistoryLimit: 10
   suspend: false
 
 ---
@@ -103,22 +109,22 @@ spec:
       template:
         spec:
           imagePullSecrets:
-          - name: your-regsitry-secret
+          - name: your-registry-secret
           containers:
           - name: scraper-backup
-            image: your-private-registry/scraper:latest
+            image: your-registry.com/scraper:latest
             imagePullPolicy: IfNotPresent
             command: ["make", "backup"]
             volumeMounts:
             - name: tiingo-scraper-data
-              mountPath: "/data/tiingo"
+              mountPath: "/home/scraper/data/tiingo/"
               subPath: "tiingo/"
             - name: cboe-scraper-data
-              mountPath: "/data/cboe"
+              mountPath: "/home/scraper/data/cboe/"
               subPath: "cboe/"
             env:
             - name: SCRAPER_DATA_PATH
-              value: "/data"
+              value: "/home/scraper/data/"
             envFrom:
             - secretRef:
                 name: aws-keys
@@ -128,11 +134,14 @@ spec:
           volumes:
           - name: cboe-scraper-data
             persistentVolumeClaim:
-              claimName: cboe-scraper-pvc
+              claimName: cboe-pvc
           - name: tiingo-scraper-data
             persistentVolumeClaim:
-              claimName: tiingo-scraper-pvc
+              claimName: tiingo-pvc
           restartPolicy: OnFailure
+          securityContext:
+            fsGroup: 999
       backoffLimit: 3
   successfulJobsHistoryLimit: 10
+  failedJobsHistoryLimit: 10
   suspend: false

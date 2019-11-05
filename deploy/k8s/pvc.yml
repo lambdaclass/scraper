@@ -2,16 +2,17 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   annotations:
+    scraper: tiingo
     volume.beta.kubernetes.io/storage-provisioner: storageos
-  name: tiingo-scraper-pvc
+  name: tiingo-pvc
   namespace: scraper
 spec:
   accessModes:
   - ReadWriteOnce
   resources:
     requests:
-      storage: 200Mi
-  storageClassName: replicated
+      storage: 1Gi
+  storageClassName: retained
   volumeMode: Filesystem
 
 ---
@@ -20,8 +21,9 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   annotations:
+    scraper: cboe
     volume.beta.kubernetes.io/storage-provisioner: storageos
-  name: cboe-scraper-pvc
+  name: cboe-pvc
   namespace: scraper
 spec:
   accessModes:
@@ -29,5 +31,5 @@ spec:
   resources:
     requests:
       storage: 1Gi
-  storageClassName: replicated
+  storageClassName: retained
   volumeMode: Filesystem

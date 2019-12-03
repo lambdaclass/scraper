@@ -145,3 +145,25 @@ spec:
   successfulJobsHistoryLimit: 10
   failedJobsHistoryLimit: 10
   suspend: false
+
+---
+
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: scraper-cleanup
+  namespace: scraper
+spec:
+  schedule: "0 19 * * 1"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: scraper-cleanup
+            image: lachlanevenson/k8s-kubectl
+            command: ["sh", "-c", 
+            "for job in $(kubectl get jobs -n scraper | awk '$4 ~ /^[2-9][0-9]d/' | awk '{print $1}'); do kubectl delete job $job -n scraper; done"]
+          serviceAccountName: scraper-cleanup
+          restartPolicy: Never
+  successfulJobsHistoryLimit: 3

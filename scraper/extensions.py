@@ -34,7 +34,6 @@ class SlackNotification:
                                 signal=signals.spider_opened)
         crawler.signals.connect(ext.spider_closed,
                                 signal=signals.spider_closed)
-        crawler.signals.connect(ext.spider_error, signal=signals.spider_error)
 
         return ext
 

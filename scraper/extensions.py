@@ -126,41 +126,6 @@ class SlackNotification:
         response = requests.post(self.webhook, json=payload)
         self._log_errors(spider, response)
 
-    def spider_error(self, failure, response, spider):
-        title = 'Scraper {} error'.format(spider.name)
-
-        payload = {
-            'channel':
-            self.channel,
-            'username':
-            self.name,
-            'icon_emoji':
-            self.emoji,
-            'attachments': [{
-                'title':
-                title,
-                'fallback':
-                title,
-                'fields': [{
-                    'title': 'Error',
-                    'value': failure.getErrorMessage(),
-                    'short': False
-                }],
-                'color':
-                '#AF3A65',
-                'author_name':
-                socket.getfqdn(),
-                'footer':
-                self.name,
-                'footer_icon':
-                'https://scrapy.org/favicons/favicon-16x16.png',
-                'ts':
-                datetime.now().timestamp()
-            }]
-        }
-        response = requests.post(self.webhook, json=payload)
-        self._log_errors(spider, response)
-
     def _log_errors(self, spider, response):
         if response.status_code != 200:
             msg = "Error connecting to Slack {}. Response is:\n{}".format(

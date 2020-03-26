@@ -18,9 +18,9 @@ The scraper needs the following environment variables:
 
 To backup data to S3, the following variables must be set:
 
-- $AWS_ACCESS_KEY_ID
-- $AWS_SECRET_ACCESS_KEY
-- $S3_BUCKET
+- `$AWS_ACCESS_KEY_ID`
+- `$AWS_SECRET_ACCESS_KEY`
+- `$S3_BUCKET`
 
 ### Install
 

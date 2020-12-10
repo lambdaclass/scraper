@@ -5,6 +5,7 @@
 # Don't forget to add your pipeline to the ITEM_PIPELINES setting
 # See: https://docs.scrapy.org/en/latest/topics/item-pipeline.html
 
+import gzip
 import io
 import os
 from datetime import date
@@ -28,6 +29,26 @@ class SaveDataPipeline:
             os.makedirs(symbol_path)
 
         with open(os.path.join(symbol_path, filename), 'w') as file:
+            data, = item['data']
+            file.write(data)
+
+        return item
+
+
+class CompressAndSavePipeline:
+    """Downloads and Gzip's symbol data"""
+    def process_item(self, item, spider):
+        symbol, = item['symbol']
+        symbol_path, = item['symbol_path']
+        filename, = item['filename']
+        spider_path = spider.settings['SPIDER_DATA_PATH']
+
+        symbol_path = os.path.join(spider_path, symbol_path)
+        if not os.path.exists(symbol_path):
+            os.makedirs(symbol_path)
+
+        with gzip.open(os.path.join(symbol_path, filename + '.gz'),
+                       'wb') as file:
             data, = item['data']
             file.write(data)
 

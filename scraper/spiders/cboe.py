@@ -7,7 +7,7 @@ import pandas as pd
 import scrapy
 from scrapy.exceptions import DropItem
 from scrapy.loader import ItemLoader
-from scrapy.http import Request, FormRequest
+from scrapy.http import Request
 
 from scraper import utils
 from scraper.items import DataItem
@@ -17,11 +17,11 @@ class CBOESpider(scrapy.Spider):
     name = 'cboe'
     allowed_domains = ['cboe.com']
     spider_path = utils.create_spider_path(name)
+    api_endpoint = 'https://cdn.cboe.com/api/global/delayed_quotes/options/'
 
     custom_settings = {
         'ITEM_PIPELINES': {
-            'scraper.pipelines.FormatData': 100,
-            'scraper.pipelines.SaveDataPipeline': 200
+            'scraper.pipelines.CompressAndSavePipeline': 200
         },
         'SPIDER_DATA_PATH':
         spider_path,
@@ -43,12 +43,6 @@ class CBOESpider(scrapy.Spider):
             self.symbols = CBOESpider._get_all_listed_symbols()
 
     def start_requests(self):
-        return [
-            Request('http://www.cboe.com/delayedquote/quote-table-download',
-                    callback=self.parse_form)
-        ]
-
-    def parse_form(self, response):
         for symbol in self.symbols:
             loader = ItemLoader(item=DataItem())
             loader.add_value('symbol', symbol)
@@ -56,33 +50,32 @@ class CBOESpider(scrapy.Spider):
             loader.add_value('start_date', datetime.now().isoformat())
             loader.add_value(
                 'filename',
-                symbol + '_' + date.today().strftime('%Y%m%d') + '.csv')
+                symbol + '_' + date.today().strftime('%Y%m%d') + '.json')
 
-            yield FormRequest.from_response(
-                response,
-                formdata={'ctl00$ContentTop$C005$txtTicker': symbol},
-                callback=self.fetch_data,
-                dont_filter=True,
-                meta={'loader': loader})
+            request_url = "{endpoint}{symbol}.json".format(
+                endpoint=CBOESpider.api_endpoint, symbol=symbol)
+
+            yield Request(request_url,
+                          callback=self.fetch_data,
+                          meta={'loader': loader})
 
     def fetch_data(self, response):
         loader = response.meta['loader']
 
         content_type = response.headers.get('Content-Type')
-        if content_type.startswith(b'text/html'):
+        if not content_type.startswith(b'application/json'):
             symbol, = loader.get_collected_values('symbol')
-            error = response.selector.xpath('//*[@id="lblError"]/text()').get()
-            raise DropItem('{} - {}'.format(symbol, error))
+            raise DropItem('Error downloading data for {}'.format(symbol))
 
         loader.add_value('end_date', datetime.now().isoformat())
-        loader.add_value('data', response.text)
+        loader.add_value('data', response.body)
 
         return loader.load_item()
 
     def _get_all_listed_symbols():
         """Returns array of all listed symbols.
-        http://www.cboe.com/publish/scheduledtask/mktdata/cboesymboldir2.csv
+        https://markets.cboe.com/us/options/symboldir/equity_index_options/
         """
-        url = 'http://www.cboe.com/publish/scheduledtask/mktdata/cboesymboldir2.csv'
-        symbols_df = pd.read_csv(url, skiprows=1)
-        return symbols_df['Stock Symbol'].array
+        url = 'https://markets.cboe.com/us/options/symboldir/equity_index_options/?download=csv'
+        symbols_df = pd.read_csv(url)
+        return symbols_df.iloc[:, 1].array
